@@ -25,9 +25,7 @@ class ClientController extends Controller
 
     public function filterClients(Request $request)
     {
-        // Fetch query parameters with defaults
-        $limit = $request->input('limit', 10); // Default limit is 10
-        $page = $request->input('page', 1);    // Default page is 1
+        // Fetch query parameters
         $clientName = $request->input('clientName');
         $clientIdCard = $request->input('clientIdCard');
         $errorMessage = null;
@@ -78,10 +76,26 @@ class ClientController extends Controller
             $query->where('idcard', $clientIdCard);
         }
 
-        // Paginate results
-        $clients = $query->paginate($limit, ['*'], 'page', $page);
+        // Fetch all matching results
+        $clients = $query->get();
 
-        // Return paginated JSON response
+        // Check if multiple results exist
+        if ($clients->count() > 1) {
+            $errorMessage = "There are multiple results for the search; please refine the parameters.";
+            $errorDescription = "clientName: " . $clientName . " clientIdCard: " . $clientIdCard;
+            $errorCode = 400; // Bad Request
+            $error = [
+                "status" => $errorCode,
+                "body" => [
+                    "error" => [
+                        "description" => $errorDescription,
+                        "message" => $errorMessage,
+                    ],
+                ],
+            ];
+            return response()->json($error, $errorCode);
+        }
+        // Return JSON response with all results
         return response()->json($clients);
     }
 }
