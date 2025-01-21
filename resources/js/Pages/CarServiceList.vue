@@ -57,25 +57,39 @@
         :loading="loading"
         tableStyle="min-width: 50rem"
       >
-        <Column field="id" header="Client ID" style="width: 25%">
+        <Column field="client.id" header="Client ID" style="width: 20%">
           <template #body="slotProps"
-            ><strong>{{ slotProps.data.id }}</strong></template
+            ><strong>{{ slotProps.data.client.id }}</strong></template
           >
         </Column>
-        <Column field="name" header="Client name" style="width: 25%">
+        <Column field="client.name" header="Client name" style="width: 20%">
           <template #body="slotProps">
             <Button
-              :label="slotProps.data.name"
+              :label="slotProps.data.client.name"
               icon="pi pi-user"
               severity="secondary"
             />
           </template>
         </Column>
-        <Column field="idcard" header="Client id card" style="width: 25%">
+        <Column
+          field="client.idcard"
+          header="Client id card"
+          style="width: 20%"
+        >
           <template #body="slotProps">
-            <Tag severity="info" :value="slotProps.data.idcard"></Tag>
+            <Tag severity="info" :value="slotProps.data.client.idcard"></Tag>
           </template>
         </Column>
+        <Column
+          field="carCount"
+          header="No. of cars"
+          style="width: 20%"
+        ></Column>
+        <Column
+          field="serviceLogCount"
+          header="No. of service logs"
+          style="width: 20%"
+        ></Column>
       </DataTable>
     </template>
     <template v-if="clients.length">
@@ -152,13 +166,16 @@ const clearFilter = () => {
   filterClientName.value = "";
   filterClientIdCard.value = "";
   filteredClient.value = null;
-  resultError.value = false;
   currentPage.value = 1;
+  resultError.value = false;
   filterErrorMessage.value = null;
   getClients();
 };
 
 const onFilter = () => {
+  resultError.value = false;
+  filterErrorMessage.value = null;
+
   if (filterClientName.value.length && filterClientIdCard.value.length) {
     filterErrorMessage.value =
       "Search only Client name or Client ID card number but not both!";

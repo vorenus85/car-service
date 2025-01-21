@@ -14,4 +14,14 @@ class Client extends Model
         'name',
         'idcard',
     ];
+
+    public function cars()
+    {
+        return $this->hasMany(Car::class);
+    }
+
+    public function serviceLogs()
+    {
+        return $this->hasMany(Service::class);
+    }
 }

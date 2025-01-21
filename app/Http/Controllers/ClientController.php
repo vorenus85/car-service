@@ -95,6 +95,26 @@ class ClientController extends Controller
             ];
             return response()->json($error, $errorCode);
         }
+
+        // If only one client is found, fetch additional data
+        if ($clients->count() === 1) {
+            $client = $clients->first();
+
+            $carCount = $client->cars()->count();
+
+
+            $serviceLogCount = $client->serviceLogs()->count(); // Assuming a `serviceLogs` relationship exists in the Client model
+
+            // Attach these counts to the response
+            $response = [[
+                'client' => $client,
+                'carCount' => $carCount,
+                'serviceLogCount' => $serviceLogCount,
+            ]];
+
+            return response()->json($response);
+        }
+
         // Return JSON response with all results
         return response()->json($clients);
     }
