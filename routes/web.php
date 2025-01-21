@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ClientController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -19,4 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+Route::get('/api/clients', [ClientController::class, 'getClients']);
+
+Route::get('/api/filterClients', [ClientController::class, 'filterClients']);
+
+require __DIR__ . '/auth.php';
