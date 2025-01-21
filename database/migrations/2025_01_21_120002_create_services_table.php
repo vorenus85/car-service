@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('car_id');
-            $table->integer('lognumber')->unique();
+            $table->integer('lognumber');
             $table->string('event');
-            $table->timestamp('eventtime');
+            $table->timestamp('eventtime')->nullable();
             $table->string('document_id');
             $table->timestamps();
     

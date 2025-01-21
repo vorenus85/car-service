@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('cars', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('client_id');
-            $table->unsignedBigInteger('car_id')->unique();
+            $table->unsignedBigInteger('client_id')->index();
+            $table->unsignedBigInteger('car_id')->index();
             $table->string('type');
             $table->timestamp('registered');
             $table->boolean('ownbrand');
