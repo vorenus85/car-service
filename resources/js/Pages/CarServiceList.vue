@@ -1,6 +1,30 @@
 <template>
-  <div class="container mx-auto">
-    <h2 class="my-5"><strong>Car service dashboard</strong></h2>
+  <div class="container mx-auto mb-5">
+    <h1 class="my-10"><strong>Car service logs</strong></h1>
+    <Card class="mb-5">
+      <template #title>Filter client</template>
+      <template #content>
+        <div class="flex flex-nowrap">
+          <InputText
+            v-model="filterClientName"
+            placeholder="Client name"
+            class="flex-initial w-64"
+          />
+          <InputText
+            v-model="filterClientIdCard"
+            class="mx-5"
+            placeholder="Client id card"
+          />
+          <Button
+            label="Search"
+            severity="info"
+            icon="pi pi-search"
+            class="ml-auto"
+            @click="onFilter"
+          ></Button>
+        </div>
+      </template>
+    </Card>
     <DataTable
       :value="clients"
       :loading="loading"
@@ -13,11 +37,14 @@
       </Column>
       <Column field="name" header="Client name" style="width: 25%">
         <template #body="slotProps">
-          <Button :label="slotProps.data.name" icon="pi pi-user" />
+          <Button
+            :label="slotProps.data.name"
+            icon="pi pi-user"
+            severity="secondary"
+          />
         </template>
-        <Button label="Profile" icon="pi pi-user" />
       </Column>
-      <Column field="idcard" header="Client id card number" style="width: 25%">
+      <Column field="idcard" header="Client id card" style="width: 25%">
         <template #body="slotProps">
           <Tag severity="info" :value="slotProps.data.idcard"></Tag>
         </template>
@@ -34,7 +61,15 @@
 </template>
 <script setup>
 import axios from "axios";
-import { Button, Column, DataTable, Paginator, Tag } from "primevue";
+import {
+  Button,
+  Card,
+  Column,
+  DataTable,
+  InputText,
+  Paginator,
+  Tag,
+} from "primevue";
 import { onMounted, ref } from "vue";
 
 const clients = ref([]);
@@ -43,18 +78,27 @@ const total = ref(0);
 const currentPage = ref(1);
 const loading = ref(false);
 
+const filterClientName = ref(null);
+const filterClientIdCard = ref(null);
+
 const onPageChange = ({ page, rows }) => {
   currentPage.value = page + 1;
   limit.value = rows;
   getClients();
 };
 
-const getClients = async () => {
+const onFilter = () => {
+  getFilteredClients();
+};
+
+const getFilteredClients = async () => {
   loading.value = true;
+
   await axios
-    .get(`/api/clients?limit=${limit.value}&page=${currentPage.value}`)
+    .get(
+      `/api/filterClients?limit=${limit.value}&page=${currentPage.value}&clientName=${filterClientName.value}&clientIdCard=${filterClientIdCard.value}`
+    )
     .then((response) => {
-      console.log(response);
       clients.value = response.data.data;
       currentPage.value = response.data.current_page;
       total.value = response.data.total;
@@ -62,7 +106,23 @@ const getClients = async () => {
     })
     .catch((error) => {
       loading.value = false;
-      console.error("Hiba történt az adatok lekérése során:", error);
+      console.error("Error during getFilteredClients:", error);
+    });
+};
+
+const getClients = async () => {
+  loading.value = true;
+  await axios
+    .get(`/api/clients?limit=${limit.value}&page=${currentPage.value}`)
+    .then((response) => {
+      clients.value = response.data.data;
+      currentPage.value = response.data.current_page;
+      total.value = response.data.total;
+      loading.value = false;
+    })
+    .catch((error) => {
+      loading.value = false;
+      console.error("Error during getClients:", error);
     });
 };
 

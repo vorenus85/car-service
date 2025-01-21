@@ -7,12 +7,11 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-
     public function getClients(Request $request)
     {
         // Fetch query parameters with defaults
         $limit = $request->input('limit', 10); // Default limit is 10
-        $page = $request->input('page', 0);    // Default page is 1
+        $page = $request->input('page', 1);    // Default page is 1
 
         // Query the clients table
         $query = Client::query();
@@ -30,28 +29,36 @@ class ClientController extends Controller
         $limit = $request->input('limit', 10); // Default limit is 10
         $page = $request->input('page', 1);    // Default page is 1
         $clientName = $request->input('clientName');
-        $clientIdcard = $request->input('clientIdcard');
-        $errorMessage = "";
-        $errorCode = null;
+        $clientIdCard = $request->input('clientIdCard');
+        $errorMessage = null;
+        $errorCode = 200; // Default to success
+        $errorDescription = null;
 
         // Validations
-        if ($clientName && $clientIdcard) {
+        if ($clientName && $clientIdCard) {
             $errorMessage = "Search only Client name or Client ID card number but not both!";
+            $errorDescription = "clientName: " . $clientName . " clientIdCard: " . $clientIdCard;
             $errorCode = 400; // Bad Request
         }
 
-        if (!$clientName && !$clientIdcard) {
+        if (is_null($clientName) && is_null($clientIdCard)) {
             $errorMessage = "Please provide either a Client name or Client ID card number!";
+            $errorDescription = "clientName: " . $clientName . " clientIdCard: " . $clientIdCard;
             $errorCode = 400; // Bad Request
         }
 
-
+        if ($clientIdCard && !is_numeric($clientIdCard)) {
+            $errorMessage = "Client ID card number must be a numeric value!";
+            $errorDescription = "clientName: " . $clientName . " clientIdCard: " . $clientIdCard;
+            $errorCode = 400; // Bad Request
+        }
 
         if ($errorMessage) {
             $error = [
                 "status" => $errorCode,
                 "body" => [
                     "error" => [
+                        "description" => $errorDescription,
                         "message" => $errorMessage,
                     ],
                 ],
@@ -67,8 +74,8 @@ class ClientController extends Controller
             $query->where('name', 'like', '%' . $clientName . '%');
         }
 
-        if ($clientIdcard) {
-            $query->where('idcard', $clientIdcard);
+        if ($clientIdCard) {
+            $query->where('idcard', $clientIdCard);
         }
 
         // Paginate results
