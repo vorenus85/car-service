@@ -72,9 +72,11 @@
               >
               <template #content>
                 <DataTable
-                  class="cars-datatable"
+                  class="small-datatable"
                   :value="slotProps.data?.cars"
                   size="small"
+                  dataKey="car_id"
+                  v-model:expandedRows="expandedServiceRows"
                   :loading="carsLoading"
                 >
                   <Column field="car_id" header="Car id">
@@ -84,7 +86,7 @@
                         severity="secondary"
                         :label="'Car ' + slotProps.data.car_id"
                         @click="
-                          onExpandRowServices({
+                          onExpandServiceRows({
                             clientId: slotProps.data.client_id,
                             carId: slotProps.data.car_id,
                           })
@@ -113,6 +115,27 @@
                     field="latestLog.eventtime"
                     header="Latest event date"
                   ></Column>
+                  <template #expansion="slotProps">
+                    <template v-if="!servicesLoading">
+                      <Card class="small-datatable">
+                        <template #title>
+                          <strong>Service log list</strong>
+                        </template>
+                        <template #content>
+                          <DataTable :value="serviceList">
+                            <Column
+                              header="Log number"
+                              field="lognumber"
+                            ></Column>
+                            <Column header="Event name" field="event"></Column>
+                            <Column
+                              header="Event date"
+                              field="eventtime"
+                            ></Column>
+                          </DataTable>
+                        </template>
+                      </Card> </template
+                  ></template>
                 </DataTable>
               </template>
             </Card>
@@ -152,13 +175,18 @@ const resultError = ref(false);
 const loading = ref(false);
 const carsLoading = ref(false);
 const servicesLoading = ref(false);
+const serviceList = ref([]);
 
 const expandedCarRows = ref({});
+const expandedServiceRows = ref({});
 
-const onExpandRowServices = async (options) => {
+const onExpandServiceRows = async (options) => {
+  expandedServiceRows.value = {}; // need because car_id not really unique
   const { clientId, carId } = options;
-  const servicesResult = await getServices({ clientId, carId });
-  console.log(servicesResult);
+  serviceList.value = await getServices({ clientId, carId });
+
+  expandedServiceRows.value[carId] = true;
+  expandedServiceRows.value = { ...expandedServiceRows.value };
 };
 
 const getServices = async (options) => {
@@ -178,14 +206,10 @@ const getServices = async (options) => {
 };
 
 const onExpandCarRows = async (id) => {
-  if (expandedCarRows.value[id]) {
-    // If the ID exists, remove it
-    delete expandedCarRows.value[id];
-  } else {
-    // If the ID doesn't exist, add it
-    expandedCarRows.value[id] = true;
-    await populateClientCars(id);
-  }
+  expandedCarRows.value = {};
+  expandedServiceRows.value = {}; // need because car_id not really unique
+  expandedCarRows.value[id] = true;
+  await populateClientCars(id);
 
   // Trigger reactivity by creating a new object reference
   expandedCarRows.value = { ...expandedCarRows.value };
