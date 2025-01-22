@@ -7,52 +7,10 @@
         resultError
       }}</Message>
     </template>
-    <template v-if="filteredClient">
-      <DataTable
-        class="filtered-client-table"
-        :value="filteredClient"
-        :loading="loading"
-        tableStyle="min-width: 50rem"
-      >
-        <Column field="client.id" header="Client ID" style="width: 20%">
-          <template #body="slotProps"
-            ><strong>{{ slotProps.data.client.id }}</strong></template
-          >
-        </Column>
-        <Column field="client.name" header="Client name" style="width: 20%">
-          <template #body="slotProps">
-            <Button
-              :label="slotProps.data.client.name"
-              icon="pi pi-user"
-              severity="secondary"
-            />
-          </template>
-        </Column>
-        <Column
-          field="client.idcard"
-          header="Client id card"
-          style="width: 20%"
-        >
-          <template #body="slotProps">
-            <Tag severity="info" :value="slotProps.data.client.idcard"></Tag>
-          </template>
-        </Column>
-        <Column
-          field="carCount"
-          header="No. of cars"
-          style="width: 20%"
-        ></Column>
-        <Column
-          field="serviceLogCount"
-          header="No. of service logs"
-          style="width: 20%"
-        ></Column>
-      </DataTable>
-    </template>
-    <template v-if="clients.length">
+    <template v-if="clients.data">
       <DataTable
         class="clients-table"
-        :value="clients"
+        :value="clients.data"
         :loading="loading"
         tableStyle="min-width: 50rem"
         dataKey="id"
@@ -78,6 +36,26 @@
             <Tag severity="info" :value="slotProps.data.idcard"></Tag>
           </template>
         </Column>
+        <Column
+          v-if="clients.carCount"
+          field="carCount"
+          header="No. of cars"
+          style="width: 20%"
+        >
+          <template #body>
+            {{ clients.carCount }}
+          </template></Column
+        >
+        <Column
+          v-if="clients.serviceLogCount"
+          field="serviceLogCount"
+          header="No. of service logs"
+          style="width: 20%"
+        >
+          <template #body>
+            {{ clients.serviceLogCount }}
+          </template></Column
+        >
         <template #expansion="slotProps">
           <template v-if="!carsLoading">
             <Message
@@ -216,7 +194,7 @@ const onExpandCarRows = async (id) => {
 const populateClientCars = async (clientId) => {
   const clientCars = await getCarsByClientId(clientId);
 
-  clients.value = clients.value.map((client) => {
+  clients.value.data = clients.value.data.map((client) => {
     if (client.id === clientId) {
       client.cars = clientCars;
     }
@@ -267,8 +245,9 @@ const getFilteredClients = async (options) => {
       `/api/filterClients?clientName=${clientName}&clientIdCard=${clientIdCard}`
     )
     .then((response) => {
-      clients.value = [];
-      filteredClient.value = response.data?.length ? response.data : null;
+      clients.value = response.data?.data.length ? response.data : null;
+      currentPage.value = 0;
+      total.value = 0;
       loading.value = false;
 
       if (response.data?.length === 0) {
@@ -288,8 +267,7 @@ const getClients = async () => {
   await axios
     .get(`/api/clients?limit=${limit.value}&page=${currentPage.value}`)
     .then((response) => {
-      filteredClient.value = null;
-      clients.value = response.data.data;
+      clients.value = response.data;
       currentPage.value = response.data.current_page;
       total.value = response.data.total;
       loading.value = false;

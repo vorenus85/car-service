@@ -106,11 +106,11 @@ class ClientController extends Controller
             $serviceLogCount = $client->serviceLogs()->count(); // Assuming a `serviceLogs` relationship exists in the Client model
 
             // Attach these counts to the response
-            $response = [[
-                'client' => $client,
+            $response = [
+                'data' => [$client],
                 'carCount' => $carCount,
                 'serviceLogCount' => $serviceLogCount,
-            ]];
+            ];
 
             return response()->json($response);
         }

@@ -24,7 +24,6 @@
           @click="onFilter"
         ></Button>
         <Button
-          v-if="clientName || clientIdCard"
           label="Clear search"
           severity="danger"
           icon="pi pi-del"
