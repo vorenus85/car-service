@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class CarController extends Controller
@@ -12,16 +13,24 @@ class CarController extends Controller
     {
         $clientId = $request->input('clientId');
 
-        // Query the cars table
-        $query = Car::query();
-
-        // Add filters based on query parameters
-        if ($clientId) {
-            $query->where('client_id',  $clientId);
+        // Validate clientId
+        if (!$clientId) {
+            return response()->json(['error' => 'Client ID is required.'], 400);
         }
 
-        // Fetch all matching results
-        $cars = $query->get();
+        // Query the cars table and process results
+        $cars = Car::where('client_id', $clientId)->get()->map(function ($car) use ($clientId) {
+            $serviceLogs = Service::where('client_id', $clientId)->where('car_id', $car->car_id)->orderBy('lognumber', 'desc')->get();
+            $latestLog = $serviceLogs->first();
+            return [
+                "car_id" => $car->car_id,
+                "type" => $car->type,
+                "registered" => $car->registered,
+                "ownbrand" => $car->ownbrand,
+                "accident" => $car->accident,
+                "latestLog" => $latestLog,
+            ];
+        });
 
         // Return JSON response with all results
         return response()->json($cars);

@@ -20,8 +20,8 @@ class Client extends Model
         return $this->hasMany(Car::class);
     }
 
-    public function serviceLogs()
+    public function serviceLogs($clientId)
     {
-        return $this->hasMany(Service::class);
+        return $this->hasMany(Service::class, 'client_id', 'id');
     }
 }
