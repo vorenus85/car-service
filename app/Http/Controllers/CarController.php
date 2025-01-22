@@ -23,6 +23,7 @@ class CarController extends Controller
             $serviceLogs = Service::where('client_id', $clientId)->where('car_id', $car->car_id)->orderBy('lognumber', 'desc')->get();
             $latestLog = $serviceLogs->first();
             return [
+                "client_id" => $clientId,
                 "car_id" => $car->car_id,
                 "type" => $car->type,
                 "registered" => $car->registered,

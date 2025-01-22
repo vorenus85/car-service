@@ -112,7 +112,7 @@
               :label="slotProps.data.name"
               icon="pi pi-user"
               severity="secondary"
-              @click="onExpandRow(slotProps.data.id)"
+              @click="onExpandRowCars(slotProps.data.id)"
             />
           </template>
         </Column>
@@ -148,6 +148,12 @@
                         icon="pi pi-car"
                         severity="secondary"
                         :label="'Car ' + slotProps.data.car_id"
+                        @click="
+                          onExpandRowServices({
+                            clientId: slotProps.data.client_id,
+                            carId: slotProps.data.car_id,
+                          })
+                        "
                       ></Button>
                     </template>
                   </Column>
@@ -210,6 +216,7 @@ const currentPage = ref(1);
 const resultError = ref(false);
 const loading = ref(false);
 const carsLoading = ref(false);
+const servicesLoading = ref(false);
 
 const expandedRows = ref({});
 
@@ -218,7 +225,30 @@ const filterClientIdCard = ref("");
 
 const filterErrorMessage = ref(null);
 
-const onExpandRow = async (id) => {
+const onExpandRowServices = async (options) => {
+  const { clientId, carId } = options;
+  const servicesResult = await getServices({ clientId, carId });
+  console.log(servicesResult);
+};
+
+const getServices = async (options) => {
+  const { clientId, carId } = options;
+  servicesLoading.value = true;
+  return await axios
+    .get(`/api/carServicesByClient?clientId=${clientId}&carId=${carId}`)
+    .then((response) => {
+      console.log("getServices", response);
+      servicesLoading.value = false;
+      return response.data;
+    })
+    .catch((error) => {
+      servicesLoading.value = false;
+      console.error("Error during getServices:", error);
+      return false;
+    });
+};
+
+const onExpandRowCars = async (id) => {
   if (expandedRows.value[id]) {
     // If the ID exists, remove it
     delete expandedRows.value[id];
@@ -241,9 +271,6 @@ const populateClientCars = async (clientId) => {
     }
     return client;
   });
-
-  // console.log(clients.value);
-  console.log(clients);
 };
 
 const onPageChange = ({ page, rows }) => {
