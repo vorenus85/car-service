@@ -142,7 +142,15 @@
                   size="small"
                   :loading="carsLoading"
                 >
-                  <Column field="car_id" header="Car id"></Column>
+                  <Column field="car_id" header="Car id">
+                    <template #body="slotProps">
+                      <Button
+                        icon="pi pi-car"
+                        severity="secondary"
+                        :label="'Car ' + slotProps.data.car_id"
+                      ></Button>
+                    </template>
+                  </Column>
                   <Column field="type" header="Car type"></Column>
                   <Column field="registered" header="Registered at"></Column>
                   <Column field="ownbrand" header="Own brand">
@@ -239,6 +247,7 @@ const populateClientCars = async (clientId) => {
 };
 
 const onPageChange = ({ page, rows }) => {
+  expandedRows.value = {};
   currentPage.value = page + 1;
   limit.value = rows;
   getClients();
