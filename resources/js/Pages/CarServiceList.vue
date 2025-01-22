@@ -98,7 +98,10 @@
         :value="clients"
         :loading="loading"
         tableStyle="min-width: 50rem"
+        dataKey="id"
+        v-model:expandedRows="expandedRows"
       >
+        <Column expander style="width: 5rem" />
         <Column field="id" header="Client ID" style="width: 25%">
           <template #body="slotProps"
             ><strong>{{ slotProps.data.id }}</strong></template
@@ -110,6 +113,7 @@
               :label="slotProps.data.name"
               icon="pi pi-user"
               severity="secondary"
+              @click="onExpandRow(slotProps.data.id)"
             />
           </template>
         </Column>
@@ -118,6 +122,9 @@
             <Tag severity="info" :value="slotProps.data.idcard"></Tag>
           </template>
         </Column>
+        <template #expansion="slotProps">
+          <div>Expanded {{ slotProps.data.id }}</div>
+        </template>
       </DataTable>
       <Paginator
         :rows="limit"
@@ -156,10 +163,48 @@ const filterClientIdCard = ref("");
 
 const filterErrorMessage = ref(null);
 
+const expandedRows = ref({ 56450: true });
+
+const sampleExpandedTable = ref([
+  {
+    id: 123,
+    name: "tyutyu",
+    date: "2025-12-15",
+  },
+]);
+
+const onExpandRow = (id) => {
+  if (expandedRows.value[id]) {
+    // If the ID exists, remove it
+    delete expandedRows.value[id];
+  } else {
+    // If the ID doesn't exist, add it
+    expandedRows.value[id] = true;
+  }
+
+  // Trigger reactivity by creating a new object reference
+  expandedRows.value = { ...expandedRows.value };
+
+  getCarsByClientId(id);
+
+  console.log(expandedRows.value);
+};
+
 const onPageChange = ({ page, rows }) => {
   currentPage.value = page + 1;
   limit.value = rows;
   getClients();
+};
+
+const getCarsByClientId = async (clientId) => {
+  await axios
+    .get(`/api/carsByClient?clientId=${clientId}`)
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((error) => {
+      console.error("Error during getFilteredClients:", error);
+    });
 };
 
 const clearFilter = () => {
