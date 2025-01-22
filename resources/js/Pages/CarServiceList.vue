@@ -17,23 +17,23 @@
         v-model:expandedRows="expandedCarRows"
       >
         <Column field="id" header="Client ID">
-          <template #body="slotProps"
-            ><strong>{{ slotProps.data.id }}</strong></template
+          <template #body="clientProps"
+            ><strong>{{ clientProps.data.id }}</strong></template
           >
         </Column>
         <Column field="name" header="Client name">
-          <template #body="slotProps">
+          <template #body="clientProps">
             <Button
-              :label="slotProps.data.name"
+              :label="clientProps.data.name"
               icon="pi pi-user"
               severity="secondary"
-              @click="onExpandCarRows(slotProps.data.id)"
+              @click="onExpandCarRows(clientProps.data.id)"
             />
           </template>
         </Column>
         <Column field="idcard" header="Client id card">
-          <template #body="slotProps">
-            <Tag severity="info" :value="slotProps.data.idcard"></Tag>
+          <template #body="clientProps">
+            <Tag severity="info" :value="clientProps.data.idcard"></Tag>
           </template>
         </Column>
         <Column
@@ -56,10 +56,10 @@
             {{ clients.serviceLogCount }}
           </template></Column
         >
-        <template #expansion="slotProps">
+        <template #expansion="carProps">
           <template v-if="!carsLoading">
             <Message
-              v-if="!slotProps.data?.cars?.length"
+              v-if="!carProps.data?.cars?.length"
               severity="secondary"
               class="w-full mt-5 mb-5"
               >Client has not any cars</Message
@@ -67,28 +67,28 @@
             <Card v-else>
               <template #title>
                 <small
-                  ><strong>{{ slotProps.data.name }}</strong> cars</small
+                  ><strong>{{ carProps.data.name }}</strong> cars</small
                 ></template
               >
               <template #content>
                 <DataTable
                   class="small-datatable"
-                  :value="slotProps.data?.cars"
+                  :value="carProps.data?.cars"
                   size="small"
                   dataKey="car_id"
                   v-model:expandedRows="expandedServiceRows"
                   :loading="carsLoading"
                 >
                   <Column field="car_id" header="Car id">
-                    <template #body="slotProps">
+                    <template #body="carProps">
                       <Button
                         icon="pi pi-car"
                         severity="secondary"
-                        :label="'Car ' + slotProps.data.car_id"
+                        :label="'Car ' + carProps.data.car_id"
                         @click="
                           onExpandServiceRows({
-                            clientId: slotProps.data.client_id,
-                            carId: slotProps.data.car_id,
+                            clientId: carProps.data.client_id,
+                            carId: carProps.data.car_id,
                           })
                         "
                       ></Button>
@@ -97,12 +97,12 @@
                   <Column field="type" header="Car type"></Column>
                   <Column field="registered" header="Registered at"></Column>
                   <Column field="ownbrand" header="Own brand">
-                    <template #body="slotProps">
+                    <template #body="carProps">
                       <Tag
                         :severity="
-                          slotProps.data.ownbrand ? 'info' : 'secondary'
+                          carProps.data.ownbrand ? 'info' : 'secondary'
                         "
-                        :value="slotProps.data.ownbrand ? 'Yes' : 'No'"
+                        :value="carProps.data.ownbrand ? 'Yes' : 'No'"
                       ></Tag>
                     </template>
                   </Column>
@@ -115,11 +115,14 @@
                     field="latestLog.eventtime"
                     header="Latest event date"
                   ></Column>
-                  <template #expansion="slotProps">
+                  <template #expansion="serviceProps">
                     <template v-if="!servicesLoading">
                       <Card class="small-datatable">
                         <template #title>
-                          <strong>Service log list</strong>
+                          <strong
+                            >Service log list of Car no.
+                            {{ serviceProps.data.car_id }}</strong
+                          >
                         </template>
                         <template #content>
                           <DataTable :value="serviceList">
@@ -181,12 +184,21 @@ const expandedCarRows = ref({});
 const expandedServiceRows = ref({});
 
 const onExpandServiceRows = async (options) => {
-  expandedServiceRows.value = {}; // need because car_id not really unique
   const { clientId, carId } = options;
-  serviceList.value = await getServices({ clientId, carId });
+  serviceList.value = [];
 
-  expandedServiceRows.value[carId] = true;
-  expandedServiceRows.value = { ...expandedServiceRows.value };
+  if (carId in expandedServiceRows.value) {
+    expandedServiceRows.value = {};
+  } else {
+    expandedServiceRows.value = {};
+    expandedServiceRows.value[carId] = true;
+    expandedServiceRows.value = { ...expandedServiceRows.value };
+    serviceList.value = await getServices({ clientId, carId });
+  }
+};
+
+const eventTime = (eventTime, registeredTime) => {
+  return eventTime === null ? registeredTime : eventTime;
 };
 
 const getServices = async (options) => {
@@ -206,13 +218,15 @@ const getServices = async (options) => {
 };
 
 const onExpandCarRows = async (id) => {
-  expandedCarRows.value = {};
-  expandedServiceRows.value = {}; // need because car_id not really unique
-  expandedCarRows.value[id] = true;
-  await populateClientCars(id);
-
-  // Trigger reactivity by creating a new object reference
-  expandedCarRows.value = { ...expandedCarRows.value };
+  expandedServiceRows.value = {};
+  if (id in expandedCarRows.value) {
+    expandedCarRows.value = {};
+  } else {
+    expandedCarRows.value = {};
+    expandedCarRows.value[id] = true;
+    expandedCarRows.value = { ...expandedCarRows.value };
+    await populateClientCars(id);
+  }
 };
 
 const populateClientCars = async (clientId) => {

@@ -25,4 +25,14 @@ class Car extends Model
     {
         return $this->belongsTo(Client::class);
     }
+
+    /**
+     * Get the registered date of a car by client_id and car_id.
+     */
+    public static function getRegisteredDate($clientId, $carId)
+    {
+        return self::where('client_id', $clientId)
+            ->where('car_id', $carId)
+            ->value('registered');
+    }
 }

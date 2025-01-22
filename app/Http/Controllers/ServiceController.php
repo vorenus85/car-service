@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Car;
 use App\Models\Service;
 use Illuminate\Http\Request;
 
@@ -22,9 +23,21 @@ class ServiceController extends Controller
             return response()->json(['error' => 'Car ID is required.'], 400);
         }
 
-        $query = Service::query()->where('client_id', $clientId)->where('car_id', $carId)->orderBy('lognumber', "desc");
+        // Get the registered date of the car
+        $registeredDate = Car::getRegisteredDate($clientId, $carId);
 
-        $services = $query->get();
+        // Fetch services and modify the `eventtime` if it is null
+        $services = Service::query()
+            ->where('client_id', $clientId)
+            ->where('car_id', $carId)
+            ->orderBy('lognumber', "desc")
+            ->get()
+            ->map(function ($service) use ($registeredDate) {
+                if (is_null($service->eventtime)) {
+                    $service->eventtime = $registeredDate;
+                }
+                return $service;
+            });
         return response()->json($services);
     }
 }
