@@ -56,7 +56,7 @@
         :loading="loading"
         tableStyle="min-width: 50rem"
         dataKey="id"
-        v-model:expandedRows="expandedRows"
+        v-model:expandedRows="expandedCarRows"
       >
         <Column field="id" header="Client ID">
           <template #body="slotProps"
@@ -69,7 +69,7 @@
               :label="slotProps.data.name"
               icon="pi pi-user"
               severity="secondary"
-              @click="onExpandRowCars(slotProps.data.id)"
+              @click="onExpandCarRows(slotProps.data.id)"
             />
           </template>
         </Column>
@@ -175,7 +175,7 @@ const loading = ref(false);
 const carsLoading = ref(false);
 const servicesLoading = ref(false);
 
-const expandedRows = ref({});
+const expandedCarRows = ref({});
 
 const onExpandRowServices = async (options) => {
   const { clientId, carId } = options;
@@ -189,7 +189,6 @@ const getServices = async (options) => {
   return await axios
     .get(`/api/carServicesByClient?clientId=${clientId}&carId=${carId}`)
     .then((response) => {
-      console.log("getServices", response);
       servicesLoading.value = false;
       return response.data;
     })
@@ -200,18 +199,18 @@ const getServices = async (options) => {
     });
 };
 
-const onExpandRowCars = async (id) => {
-  if (expandedRows.value[id]) {
+const onExpandCarRows = async (id) => {
+  if (expandedCarRows.value[id]) {
     // If the ID exists, remove it
-    delete expandedRows.value[id];
+    delete expandedCarRows.value[id];
   } else {
     // If the ID doesn't exist, add it
-    expandedRows.value[id] = true;
+    expandedCarRows.value[id] = true;
     await populateClientCars(id);
   }
 
   // Trigger reactivity by creating a new object reference
-  expandedRows.value = { ...expandedRows.value };
+  expandedCarRows.value = { ...expandedCarRows.value };
 };
 
 const populateClientCars = async (clientId) => {
@@ -226,7 +225,7 @@ const populateClientCars = async (clientId) => {
 };
 
 const onPageChange = ({ page, rows }) => {
-  expandedRows.value = {};
+  expandedCarRows.value = {};
   currentPage.value = page + 1;
   limit.value = rows;
   getClients();
@@ -285,6 +284,7 @@ const getFilteredClients = async (options) => {
 
 const getClients = async () => {
   loading.value = true;
+  expandedCarRows.value = {};
   await axios
     .get(`/api/clients?limit=${limit.value}&page=${currentPage.value}`)
     .then((response) => {
