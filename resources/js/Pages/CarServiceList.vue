@@ -122,32 +122,52 @@
           </template>
         </Column>
         <template #expansion="slotProps">
-          <Card>
-            <template #title>
-              <small
-                ><strong>{{ slotProps.data.name }}</strong> cars</small
-              ></template
+          <template v-if="!carsLoading">
+            <Message
+              v-if="!slotProps.data?.cars?.length"
+              severity="secondary"
+              class="w-full mt-5 mb-5"
+              >Client has not any cars</Message
             >
-            <template #content>
-              <DataTable
-                class="cars-datatable"
-                :value="slotProps.data?.cars"
-                size="small"
-                :loading="carsLoading"
+            <Card v-else>
+              <template #title>
+                <small
+                  ><strong>{{ slotProps.data.name }}</strong> cars</small
+                ></template
               >
-                <Column field="car_id" header="Car id"></Column>
-                <Column field="type" header="Car type"></Column>
-                <Column field="registered" header="Registered at"></Column>
-                <Column field="ownbrand" header="Own brand"></Column>
-                <Column field="accident" header="No accident(s)"></Column>
-                <Column field="latestLog.event" header="Latest event"></Column>
-                <Column
-                  field="latestLog.eventtime"
-                  header="Latest event date"
-                ></Column>
-              </DataTable>
-            </template>
-          </Card>
+              <template #content>
+                <DataTable
+                  class="cars-datatable"
+                  :value="slotProps.data?.cars"
+                  size="small"
+                  :loading="carsLoading"
+                >
+                  <Column field="car_id" header="Car id"></Column>
+                  <Column field="type" header="Car type"></Column>
+                  <Column field="registered" header="Registered at"></Column>
+                  <Column field="ownbrand" header="Own brand">
+                    <template #body="slotProps">
+                      <Tag
+                        :severity="
+                          slotProps.data.ownbrand ? 'info' : 'secondary'
+                        "
+                        :value="slotProps.data.ownbrand ? 'Yes' : 'No'"
+                      ></Tag>
+                    </template>
+                  </Column>
+                  <Column field="accident" header="No. of accident(s)"></Column>
+                  <Column
+                    field="latestLog.event"
+                    header="Latest event"
+                  ></Column>
+                  <Column
+                    field="latestLog.eventtime"
+                    header="Latest event date"
+                  ></Column>
+                </DataTable>
+              </template>
+            </Card>
+          </template>
         </template>
       </DataTable>
       <Paginator
