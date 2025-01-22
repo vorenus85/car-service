@@ -19,7 +19,7 @@ class Service extends Model
     ];
 
     /**
-     * Kapcsolat az ügyféllel (Client).
+     * Foreign key with Client.
      */
     public function client()
     {
@@ -27,7 +27,7 @@ class Service extends Model
     }
 
     /**
-     * Kapcsolat az autóval (Car).
+     * Foreign key with Car.
      */
     public function car()
     {

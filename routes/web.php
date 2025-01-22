@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CarController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -23,5 +24,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/api/clients', [ClientController::class, 'getClients']);
 
 Route::get('/api/filterClients', [ClientController::class, 'filterClients']);
+
+Route::get('/api/carsByClient', [CarController::class, 'getCarsByClientId']);
 
 require __DIR__ . '/auth.php';
