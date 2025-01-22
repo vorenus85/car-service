@@ -1,50 +1,7 @@
 <template>
   <div class="container mx-auto mb-5">
     <h1 class="my-10"><strong>Car service logs</strong></h1>
-    <Card class="mb-5">
-      <template #title>Search client</template>
-      <template #content>
-        <div class="flex flex-nowrap">
-          <InputText
-            v-model="filterClientName"
-            @keyup.enter="onFilter"
-            placeholder="Client name"
-            class="flex-initial w-64"
-          />
-          <InputText
-            v-model="filterClientIdCard"
-            @keyup.enter="onFilter"
-            class="mx-5"
-            placeholder="Client id card"
-          />
-
-          <Button
-            label="Search"
-            severity="info"
-            icon="pi pi-search"
-            class="ml-auto"
-            @click="onFilter"
-          ></Button>
-          <Button
-            v-if="filterClientName || filterClientIdCard"
-            label="Clear search"
-            severity="danger"
-            icon="pi pi-del"
-            class="ml-5"
-            @click="clearFilter"
-          ></Button>
-        </div>
-        <div class="flex mt-5" v-if="filterErrorMessage">
-          <Message
-            severity="error"
-            size="small"
-            icon="pi pi pi-times-circle"
-            class="w-full"
-            >{{ filterErrorMessage }}</Message
-          >
-        </div>
-      </template>
-    </Card>
+    <ServiceFilter @clearFilter="onClearFilter" @onFilter="onFilter" />
     <template v-if="resultError">
       <Message severity="error" class="w-full mt-5 mb-5">{{
         resultError
@@ -195,13 +152,13 @@
   </div>
 </template>
 <script setup>
+import ServiceFilter from "@/Components/ServiceFilter.vue";
 import axios from "axios";
 import {
   Button,
   Card,
   Column,
   DataTable,
-  InputText,
   Message,
   Paginator,
   Tag,
@@ -219,11 +176,6 @@ const carsLoading = ref(false);
 const servicesLoading = ref(false);
 
 const expandedRows = ref({});
-
-const filterClientName = ref("");
-const filterClientIdCard = ref("");
-
-const filterErrorMessage = ref(null);
 
 const onExpandRowServices = async (options) => {
   const { clientId, carId } = options;
@@ -295,45 +247,25 @@ const getCarsByClientId = async (clientId) => {
     });
 };
 
-const clearFilter = () => {
-  filterClientName.value = "";
-  filterClientIdCard.value = "";
+const onClearFilter = () => {
   filteredClient.value = null;
   currentPage.value = 1;
   resultError.value = false;
-  filterErrorMessage.value = null;
   getClients();
 };
 
-const onFilter = () => {
+const onFilter = (options) => {
   resultError.value = false;
-  filterErrorMessage.value = null;
-
-  if (filterClientName.value.length && filterClientIdCard.value.length) {
-    filterErrorMessage.value =
-      "Search only Client name or Client ID card number but not both!";
-  }
-
-  if (!filterClientName.value && !filterClientIdCard.value) {
-    filterErrorMessage.value =
-      "Please provide either a Client name or Client ID card number!";
-  }
-
-  if (filterClientIdCard.value && isNaN(filterClientIdCard.value)) {
-    filterErrorMessage.value = "Client ID card number must be a numeric value!";
-  }
-
-  if (!filterErrorMessage.value) {
-    getFilteredClients();
-  }
+  getFilteredClients(options);
 };
 
-const getFilteredClients = async () => {
+const getFilteredClients = async (options) => {
+  const { clientName, clientIdCard } = options;
   loading.value = true;
 
   await axios
     .get(
-      `/api/filterClients?clientName=${filterClientName.value}&clientIdCard=${filterClientIdCard.value}`
+      `/api/filterClients?clientName=${clientName}&clientIdCard=${clientIdCard}`
     )
     .then((response) => {
       clients.value = [];
