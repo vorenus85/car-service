@@ -19,6 +19,7 @@
     "primevue": "^4.2.5",
     "tailwindcss": "^3.2.1",
     "vite": "^6.0.8",
-    "vue": "^3.4.0"
+    "vue": "^3.4.0",
+    "sass-embedded": "^1.83.4"
   }
 }

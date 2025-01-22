@@ -101,13 +101,12 @@
         dataKey="id"
         v-model:expandedRows="expandedRows"
       >
-        <Column expander style="width: 5rem" />
-        <Column field="id" header="Client ID" style="width: 25%">
+        <Column field="id" header="Client ID">
           <template #body="slotProps"
             ><strong>{{ slotProps.data.id }}</strong></template
           >
         </Column>
-        <Column field="name" header="Client name" style="width: 25%">
+        <Column field="name" header="Client name">
           <template #body="slotProps">
             <Button
               :label="slotProps.data.name"
@@ -117,13 +116,38 @@
             />
           </template>
         </Column>
-        <Column field="idcard" header="Client id card" style="width: 25%">
+        <Column field="idcard" header="Client id card">
           <template #body="slotProps">
             <Tag severity="info" :value="slotProps.data.idcard"></Tag>
           </template>
         </Column>
         <template #expansion="slotProps">
-          <div>Expanded {{ slotProps.data.id }}</div>
+          <Card>
+            <template #title>
+              <small
+                ><strong>{{ slotProps.data.name }}</strong> cars</small
+              ></template
+            >
+            <template #content>
+              <DataTable
+                class="cars-datatable"
+                :value="slotProps.data?.cars"
+                size="small"
+                :loading="carsLoading"
+              >
+                <Column field="car_id" header="Car id"></Column>
+                <Column field="type" header="Car type"></Column>
+                <Column field="registered" header="Registered at"></Column>
+                <Column field="ownbrand" header="Own brand"></Column>
+                <Column field="accident" header="No accident(s)"></Column>
+                <Column field="latestLog.event" header="Latest event"></Column>
+                <Column
+                  field="latestLog.eventtime"
+                  header="Latest event date"
+                ></Column>
+              </DataTable>
+            </template>
+          </Card>
         </template>
       </DataTable>
       <Paginator
@@ -157,37 +181,41 @@ const total = ref(0);
 const currentPage = ref(1);
 const resultError = ref(false);
 const loading = ref(false);
+const carsLoading = ref(false);
+
+const expandedRows = ref({});
 
 const filterClientName = ref("");
 const filterClientIdCard = ref("");
 
 const filterErrorMessage = ref(null);
 
-const expandedRows = ref({ 56450: true });
-
-const sampleExpandedTable = ref([
-  {
-    id: 123,
-    name: "tyutyu",
-    date: "2025-12-15",
-  },
-]);
-
-const onExpandRow = (id) => {
+const onExpandRow = async (id) => {
   if (expandedRows.value[id]) {
     // If the ID exists, remove it
     delete expandedRows.value[id];
   } else {
     // If the ID doesn't exist, add it
     expandedRows.value[id] = true;
+    await populateClientCars(id);
   }
 
   // Trigger reactivity by creating a new object reference
   expandedRows.value = { ...expandedRows.value };
+};
 
-  getCarsByClientId(id);
+const populateClientCars = async (clientId) => {
+  const clientCars = await getCarsByClientId(clientId);
 
-  console.log(expandedRows.value);
+  clients.value = clients.value.map((client) => {
+    if (client.id === clientId) {
+      client.cars = clientCars;
+    }
+    return client;
+  });
+
+  // console.log(clients.value);
+  console.log(clients);
 };
 
 const onPageChange = ({ page, rows }) => {
@@ -197,13 +225,17 @@ const onPageChange = ({ page, rows }) => {
 };
 
 const getCarsByClientId = async (clientId) => {
-  await axios
+  carsLoading.value = true;
+  return await axios
     .get(`/api/carsByClient?clientId=${clientId}`)
     .then((response) => {
-      console.log(response);
+      carsLoading.value = false;
+      return response.data;
     })
     .catch((error) => {
-      console.error("Error during getFilteredClients:", error);
+      carsLoading.value = false;
+      console.error("Error during getCarsByClientId:", error);
+      return false;
     });
 };
 
@@ -284,3 +316,6 @@ onMounted(() => {
   getClients();
 });
 </script>
+<style lang="scss">
+@import "../style.scss";
+</style>
